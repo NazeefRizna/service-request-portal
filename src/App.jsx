@@ -4,6 +4,10 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { EmptyState } from './components/ui'
 import Login from './pages/Login'
 import Requirements from './pages/Requirements'
+import Requests from './pages/Requests'
+import NewRequest from './pages/NewRequest'
+import RequestDetail from './pages/RequestDetail'
+import Approvals from './pages/Approvals'
 
 function NotFound() {
   return (
@@ -11,8 +15,8 @@ function NotFound() {
       title="Page not found"
       description="This page does not exist or has not been built yet."
       action={
-        <Link to="/requirements" className="text-sm font-medium text-indigo-600 hover:underline">
-          Go to Requirements
+        <Link to="/requests" className="text-sm font-medium text-indigo-600 hover:underline">
+          Go to Requests
         </Link>
       }
     />
@@ -30,7 +34,18 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/requirements" replace />} />
+        <Route index element={<Navigate to="/requests" replace />} />
+        <Route path="/requests" element={<Requests />} />
+        <Route path="/requests/new" element={<NewRequest />} />
+        <Route path="/requests/:id" element={<RequestDetail />} />
+        <Route
+          path="/approvals"
+          element={
+            <ProtectedRoute roles={['manager']}>
+              <Approvals />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/requirements" element={<Requirements />} />
         <Route path="*" element={<NotFound />} />
       </Route>
