@@ -3,6 +3,7 @@ import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { EmptyState } from './components/ui'
 import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
 import Requirements from './pages/Requirements'
 import Requests from './pages/Requests'
 import NewRequest from './pages/NewRequest'
@@ -15,8 +16,8 @@ function NotFound() {
       title="Page not found"
       description="This page does not exist or has not been built yet."
       action={
-        <Link to="/requests" className="text-sm font-medium text-indigo-600 hover:underline">
-          Go to Requests
+        <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:underline">
+          Go to Dashboard
         </Link>
       }
     />
@@ -34,7 +35,8 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/requests" replace />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/requests/new" element={<NewRequest />} />
         <Route path="/requests/:id" element={<RequestDetail />} />
