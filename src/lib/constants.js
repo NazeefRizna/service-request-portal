@@ -44,3 +44,8 @@ export const ROLE_LABELS = {
 const repo = (import.meta.env.VITE_GITHUB_REPO || '').trim()
 export const GITHUB_REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo) ? repo : null
 export const GITHUB_URL = GITHUB_REPO ? `https://github.com/${GITHUB_REPO}` : null
+
+// Demo mode: credentials come from environment variables, never from source code.
+// Anything exposed via VITE_ is public in the browser bundle, so use a demo-only password.
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+export const DEMO_PASSWORD = DEMO_MODE ? import.meta.env.VITE_DEMO_PASSWORD || '' : ''
