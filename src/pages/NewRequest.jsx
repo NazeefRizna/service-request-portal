@@ -6,7 +6,7 @@ import { fetchLookups, submitRequest } from '../lib/api'
 import { friendlyError } from '../lib/errors'
 import { validateRequest } from '../lib/validation'
 import { LIMITS, PRIORITIES, SLA_DAYS } from '../lib/constants'
-import { formatDate } from '../lib/format'
+import { dueDateFromToday, formatDate } from '../lib/format'
 
 export default function NewRequest() {
   const { profile } = useAuth()
@@ -68,7 +68,7 @@ export default function NewRequest() {
     }
   }
 
-  const dueDate = new Date(Date.now() + (SLA_DAYS[values.priority] || 0) * 86400000)
+    const dueDate = dueDateFromToday(SLA_DAYS[values.priority] || 0)
 
   if (loadingLookups) return <Spinner label="Loading form…" />
 

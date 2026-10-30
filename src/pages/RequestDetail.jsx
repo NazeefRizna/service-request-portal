@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -31,33 +31,37 @@ export default function RequestDetail() {
   const [notice, setNotice] = useState(
     location.state?.created ? `Request ${location.state.created} submitted and routed for approval.` : null,
   )
-
-  const load = useCallback(async () => {
-    if (!requestId) return
-    try {
-      const [req, hist] = await Promise.all([fetchRequestById(requestId), fetchHistory(requestId)])
-      setRequest(req)
-      setHistory(hist)
-      setError(null)
-    } catch (err) {
-      setError(friendlyError(err, 'Unable to load this request.'))
-    } finally {
-      setLoading(false)
-    }
-  }, [requestId])
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (!requestId) return undefined
+    let active = true
+    Promise.all([fetchRequestById(requestId), fetchHistory(requestId)])
+      .then(([req, hist]) => {
+        if (!active) return
+        setRequest(req)
+        setHistory(hist)
+        setError(null)
+      })
+      .catch((err) => {
+        if (active) setError(friendlyError(err, 'Unable to load this request.'))
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [requestId, reloadKey])
 
   function handleDecision(decision, updated) {
     setNotice(`Request ${updated?.reference || ''} ${decision === 'Approved' ? 'approved' : 'rejected'}.`)
-    load()
+    setReloadKey((k) => k + 1)
   }
 
   function handleComplete(updated) {
     setNotice(`Request ${updated?.reference || ''} marked as completed.`)
-    load()
+    setReloadKey((k) => k + 1)
   }
 
   const backLink = (
@@ -82,10 +86,7 @@ export default function RequestDetail() {
     return (
       <div>
         {backLink}
-        <EmptyState
-          title="Request not found"
-          description="This request does not exist or you do not have permission to view it."
-        />
+        <EmptyState title="Request not found" description="This request does not exist or you do not have permission to view it." />
       </div>
     )
   }
@@ -138,9 +139,7 @@ export default function RequestDetail() {
                 <Meta label="Last updated">{formatDateTime(request.updated_at)}</Meta>
                 {request.decided_at && (
                   <>
-                    <Meta label={request.status === 'Rejected' ? 'Rejected' : 'Approved'}>
-                      {formatDateTime(request.decided_at)}
-                    </Meta>
+                    <Meta label={request.status === 'Rejected' ? 'Rejected' : 'Approved'}>{formatDateTime(request.decided_at)}</Meta>
                     <Meta label="Decided by">{request.decider?.full_name || '—'}</Meta>
                   </>
                 )}

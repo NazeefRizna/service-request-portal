@@ -33,3 +33,7 @@ export function todayISO() {
   const offset = d.getTimezoneOffset() * 60000
   return new Date(d.getTime() - offset).toISOString().slice(0, 10)
 }
+
+export function dueDateFromToday(days) {
+  return new Date(Date.now() + days * 86400000)
+}

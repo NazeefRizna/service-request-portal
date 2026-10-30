@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FilePlus2, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -21,27 +21,33 @@ export default function Requests() {
   const [status, setStatus] = useState('')
   const [department, setDepartment] = useState('')
   const [priority, setPriority] = useState('')
-
-  const load = useCallback(async () => {
-    try {
-      const data = await fetchRequests()
-      setRows(data)
-      setError(null)
-    } catch (err) {
-      setError(friendlyError(err, 'Unable to load requests.'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [])
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
-    load()
-  }, [load])
+    let active = true
+    fetchRequests()
+      .then((data) => {
+        if (!active) return
+        setRows(data)
+        setError(null)
+      })
+      .catch((err) => {
+        if (active) setError(friendlyError(err, 'Unable to load requests.'))
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false)
+          setRefreshing(false)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [reloadKey])
 
   function refresh() {
     setRefreshing(true)
-    load()
+    setReloadKey((k) => k + 1)
   }
 
   const departments = useMemo(
@@ -160,11 +166,7 @@ export default function Requests() {
                 {filtered.map((r) => {
                   const overdue = isOverdue(r)
                   return (
-                    <tr
-                      key={r.id}
-                      onClick={() => navigate(`/requests/${r.id}`)}
-                      className="cursor-pointer hover:bg-slate-50"
-                    >
+                    <tr key={r.id} onClick={() => navigate(`/requests/${r.id}`)} className="cursor-pointer hover:bg-slate-50">
                       <td className="whitespace-nowrap px-4 py-3 font-mono text-xs">
                         <Link
                           to={`/requests/${r.id}`}
@@ -183,9 +185,7 @@ export default function Requests() {
                       <td className="px-4 py-3">
                         <StatusBadge status={r.status} />
                       </td>
-                      {staffView && (
-                        <td className="whitespace-nowrap px-4 py-3 text-slate-600">{r.requester?.full_name}</td>
-                      )}
+                      {staffView && <td className="whitespace-nowrap px-4 py-3 text-slate-600">{r.requester?.full_name}</td>}
                       <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(r.submitted_at)}</td>
                       <td className={`whitespace-nowrap px-4 py-3 ${overdue ? 'font-medium text-rose-600' : 'text-slate-600'}`}>
                         {formatDate(r.due_date)}

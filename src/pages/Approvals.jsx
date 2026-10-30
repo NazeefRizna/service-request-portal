@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -17,27 +17,33 @@ export default function Approvals() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null)
-
-  const load = useCallback(async () => {
-    try {
-      const data = await fetchPendingApprovals()
-      setRows(data)
-      setError(null)
-    } catch (err) {
-      setError(friendlyError(err, 'Unable to load the approval queue.'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [])
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
-    load()
-  }, [load])
+    let active = true
+    fetchPendingApprovals()
+      .then((data) => {
+        if (!active) return
+        setRows(data)
+        setError(null)
+      })
+      .catch((err) => {
+        if (active) setError(friendlyError(err, 'Unable to load the approval queue.'))
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false)
+          setRefreshing(false)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [reloadKey])
 
   function refresh() {
     setRefreshing(true)
-    load()
+    setReloadKey((k) => k + 1)
   }
 
   const sorted = useMemo(
@@ -116,9 +122,7 @@ export default function Approvals() {
                   </div>
                   <div className="lg:col-span-2 lg:border-l lg:border-slate-100 lg:pl-5">
                     {own ? (
-                      <p className="text-sm text-slate-500">
-                        This is your own request. Another manager must approve or reject it.
-                      </p>
+                      <p className="text-sm text-slate-500">This is your own request. Another manager must approve or reject it.</p>
                     ) : (
                       <DecisionPanel request={r} onDone={handleDone} />
                     )}
