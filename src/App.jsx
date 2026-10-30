@@ -9,12 +9,15 @@ import Requests from './pages/Requests'
 import NewRequest from './pages/NewRequest'
 import RequestDetail from './pages/RequestDetail'
 import Approvals from './pages/Approvals'
+import Dataset from './pages/Dataset'
+import Security from './pages/Security'
+import Handover from './pages/Handover'
 
 function NotFound() {
   return (
     <EmptyState
       title="Page not found"
-      description="This page does not exist or has not been built yet."
+      description="The page you are looking for does not exist."
       action={
         <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:underline">
           Go to Dashboard
@@ -48,7 +51,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/dataset" element={<Dataset />} />
         <Route path="/requirements" element={<Requirements />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/handover" element={<Handover />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
